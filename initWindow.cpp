@@ -93,8 +93,10 @@ void initWindow::on_pushButton_login_clicked()
     recvMsg(csocket,msgres);
     if(msgres.getmsgType() == msgType::connYES){
         QMessageBox::information(this,QString("login"),QString("数据库连接成功"));
+    }else if(msgres.getmsgType() == msgType::connNO){
+        QMessageBox::warning(this,QString("login"),QString("数据库连接失败"));
     }else{
-        QMessageBox::warning(this,QString("login"),QString("error in recvMsg()"));
+        QMessageBox::critical(this,QString("login"),QString("error"));
     }
 
     clientMain* window = new clientMain(this->csocket);

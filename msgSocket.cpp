@@ -62,7 +62,7 @@ bool createSocket(SOCKET &fd, int nSockType)
     }
 
     //连接server
-    if(connectServer(fd,serverAddr, Port))
+    if(connectServer(fd,serverAddr, msgPort))
         return true;
     else{
         QMessageBox::warning(nullptr,QString("connectServer"),QString("Error in createSocket()"),QMessageBox::Cancel);("WSAStartup");

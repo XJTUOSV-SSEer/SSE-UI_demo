@@ -129,13 +129,13 @@
      </rect>
     </property>
    </widget>
-   <widget class="QTextBrowser" name="textBrowser">
+   <widget class="QTableWidget" name="tableWidget">
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>90</y>
+      <y>70</y>
       <width>541</width>
-      <height>251</height>
+      <height>271</height>
      </rect>
     </property>
    </widget>
@@ -146,7 +146,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -8,7 +8,8 @@
 #include <iostream>
 
 inline const char* serverAddr = "127.0.0.1";
-const int Port = 55555;
+const int msgPort = 20000;
+const int filePort = 20001;
 
 const int bufSize = 1024 * 1;
 
