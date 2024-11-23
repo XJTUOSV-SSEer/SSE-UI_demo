@@ -9,26 +9,19 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets sql )
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets sql )
+find_package(Qt6 COMPONENTS Core Gui Widgets sql REQUIRED )
 
-set(PROJECT_SOURCES
+add_executable(SSE-UI_demo
+
         main.cpp
-        initwindow.cpp
-        initwindow.h
-        initwindow.ui
+        initWindow.cpp
+        initWindow.h
+        initWindow.ui
+        myMsg.cpp myMsg.h
+        msgSocket.cpp msgSocket.h
+        clientMain.h clientMain.cpp clientMain.ui
+        waittingDialog.h waittingDialog.cpp waittingDialog.ui
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(SSE-UI_demo
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-        mymsg.h mymsg.cpp
-        msgsocket.h msgsocket.cpp
-
-    )
-
-
-target_link_libraries(SSE-UI_demo PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Sql)
+target_link_libraries(SSE-UI_demo PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql )
 target_link_libraries(${PROJECT_NAME} PUBLIC $<$<BOOL:${MINGW}>:ws2_32>)

@@ -1,17 +1,20 @@
-#include "initwindow.h"
+#include "initWindow.h"
 #include "./ui_initwindow.h"
+#include "clientMain.h"
+
+#include <QSettings>
+#include <QString>
+#include <QMessageBox>
+#include <QWaitCondition>
+#include <QPalette>
 
 initWindow::initWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::initWindow)
 {
     ui->setupUi(this);
-    // m_pMaskLayer = new LoadingForm(this);
-    // m_pMaskLayer->setFixedSize(this->size());//设置窗口大小
-    // m_pMaskLayer->setVisible(false);//初始状态下隐藏，待需要显示时使用
-    // this->stackUnder(m_pMaskLayer);//其中pWrapper为当前窗口的QWidget
-
     ischeck = false;
+    csocket = INVALID_SOCKET;
 
     QString hostName;
     QString port;
@@ -37,7 +40,7 @@ initWindow::initWindow(QWidget *parent)
             ui->lineEdit_database->setText(database);
         }
     }else{
-        QMessageBox::information(this,QStringLiteral("read config file"),QStringLiteral("error in config file reading"));
+        QMessageBox::information(this,QString("read config file"),QString("error in config file reading"));
     }
 }
 
@@ -48,16 +51,14 @@ initWindow::~initWindow()
 
 void initWindow::on_pushButton_socket_clicked()
 {
-    if(!init_Socket()){
-        std::cout << "Error Create" << std::endl;
-        return;
-    }
+    if(!init_Socket())return;
+
     SOCKET fd;
-    fd = create_clientSocket();
-    if(fd == INVALID_SOCKET){
-        QMessageBox::warning(nullptr,QObject::tr("Create client socket"),QObject::tr("Error in socket creation"),QMessageBox::Cancel);
+    if(createSocket(fd)){
+        QMessageBox::information(this,QString("createSocket"),QString("代理连接成功"));
     }else{
-        QMessageBox::information(nullptr,QObject::tr("Create client socket"),QObject::tr("connect success!"),QMessageBox::Ok);
+        // QMessageBox::warning(nullptr,QString("createSocket"),QString("Error in on_pushButton_socket_clicked()"),QMessageBox::Cancel);
+        return;
     }
     csocket = fd;
 }
@@ -71,6 +72,10 @@ void initWindow::on_checkBox_checkStateChanged(const Qt::CheckState &arg1)
 
 void initWindow::on_pushButton_login_clicked()
 {
+    if(csocket == INVALID_SOCKET){
+        QMessageBox::warning(this,QString("login"),QString("无效代理，请重新连接代理"));
+        return;
+    }
     QString hostName = ui->lineEdit_host->text();
     QString port = ui->lineEdit_port->text();
     QString user = ui->lineEdit_user->text();
@@ -78,23 +83,23 @@ void initWindow::on_pushButton_login_clicked()
     QString database = ui->lineEdit_database->text();
     QString CONNINFO = QString("dbname=%1 user=%2 password=%3 hostaddr=%4 port=%5").arg(database,user,password,hostName,port);
     std::string PGSQL_CONNINFO = CONNINFO.toStdString();
-    myMessage msg(msgType::conn,PGSQL_CONNINFO);
+    myMsg msg(msgType::conn,PGSQL_CONNINFO);
     if(sendMsg(csocket,msg) < 0){
-        QMessageBox::warning(this,tr("connect"),tr("database connection error"));
+        QMessageBox::warning(this,QString("login"),QString("error in sendMsg()"));
         return;
     }
 
-    msg = recvMsg(csocket);
-    if((msg.getmsgType()==msgType::connresult) && (msg.getmsgContent() == "success")){
-        QMessageBox::information(this,tr("connect"),tr("database connection successful"));
+    myMsg msgres(msgType::none);
+    recvMsg(csocket,msgres);
+    if(msgres.getmsgType() == msgType::connYES){
+        QMessageBox::information(this,QString("login"),QString("数据库连接成功"));
     }else{
-        QMessageBox::warning(this,tr("connect"),tr("database connection error"));
+        QMessageBox::warning(this,QString("login"),QString("error in recvMsg()"));
     }
-    //TODO
-    MainWindow* window = new MainWindow(csocket);
+
+    clientMain* window = new clientMain(this->csocket);
     window->show();
     this->close();
-    delete this;
 }
 
 
@@ -102,4 +107,3 @@ void initWindow::on_pushButton_quit_clicked()
 {
     delete this;
 }
-

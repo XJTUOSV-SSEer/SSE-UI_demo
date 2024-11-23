@@ -1,13 +1,13 @@
-#include "mymsg.h"
+#include "myMsg.h"
 
 myMsg::myMsg() {
     this->mtype = msgType::none;
-    this->msgContent = "";
+    this->msgContent = "\0";
 }
 
 myMsg:: myMsg(enum msgType mtype){
     this->mtype = mtype;
-    this->msgContent = "";
+    this->msgContent = "\0";
 }
 
 myMsg:: myMsg(enum msgType mtype, std::string mcontent){

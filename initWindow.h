@@ -1,7 +1,7 @@
 #ifndef INITWINDOW_H
 #define INITWINDOW_H
 
-#include "msgsocket.h"
+#include "msgSocket.h"
 
 #include <QMainWindow>
 
