@@ -1,13 +1,25 @@
+#pragma once
 #ifndef CLIENTMAIN_H
 #define CLIENTMAIN_H
 
 #include "msgSocket.h"
+#include "myQMsgBox.h"
 
 #include <QMainWindow>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQueryModel>
 #include <QDebug>
 #include <QMessageBox>
+#include <QFileDialog>
+#include <QString>
+#include <QtSql/QSqlQueryModel>
+#include <QtSql/QSqlQuery>
+#include <QStringList>
+#include <QTextStream>
+#include <QTimer>
+#include <QProgressDialog>
+#include <QStandardItemModel>
+#include <QTableView>
 
 namespace Ui {
 class clientMain;
@@ -34,12 +46,15 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    bool sendFile(SOCKET s, std::string filepath);
+    bool sendFile(SOCKET socket, std::string filepath);
+    bool recvSqlResult(SOCKET socket,std::vector<std::vector<std::string>> &sqlresult);
+    void setSqlRes2Table(std::vector<std::vector<std::string>> &sqlresult,QStringList &headers);
 
 private:
     Ui::clientMain *ui;
     SOCKET msgsocket;
     SOCKET filesocket;
+    SOCKET sqlsocket;
     qint64 totalBytes;
     QString fileName;
 };

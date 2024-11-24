@@ -1,11 +1,16 @@
+#pragma once
 #ifndef MSGSOCKET_H
 #define MSGSOCKET_H
 
 #include "myMsg.h"
-#pragma once
-#include <WinSock2.h>
-#pragma comment(lib, "ws2_32.lib")
+#include <winsock2.h>
+#include <cstdio>
+#include <cstring>
+#include <QMessageBox>
+#include <QString>
+#include <windows.h>
 #include <iostream>
+#pragma comment(lib, "ws2_32.lib")
 
 inline const char* serverAddr = "127.0.0.1";
 const int msgPort = 20000;

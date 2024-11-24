@@ -21,6 +21,7 @@ add_executable(SSE-UI_demo
         msgSocket.cpp msgSocket.h
         clientMain.h clientMain.cpp clientMain.ui
         waittingDialog.h waittingDialog.cpp waittingDialog.ui
+        myQMsgBox.h myQMsgBox.cpp
 )
 
 target_link_libraries(SSE-UI_demo PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql )

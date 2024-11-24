@@ -1,12 +1,7 @@
 #include "initWindow.h"
 #include "./ui_initwindow.h"
-#include "clientMain.h"
 
-#include <QSettings>
-#include <QString>
-#include <QMessageBox>
-#include <QWaitCondition>
-#include <QPalette>
+using namespace std;
 
 initWindow::initWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -40,7 +35,7 @@ initWindow::initWindow(QWidget *parent)
             ui->lineEdit_database->setText(database);
         }
     }else{
-        QMessageBox::information(this,QString("read config file"),QString("error in config file reading"));
+        QMessageBox::information(this,tr("read config file"),tr("error in config file reading"));
     }
 }
 
@@ -55,9 +50,15 @@ void initWindow::on_pushButton_socket_clicked()
 
     SOCKET fd;
     if(createSocket(fd)){
-        QMessageBox::information(this,QString("createSocket"),QString("代理连接成功"));
+        myQMsgBox msgBox(this);
+        msgBox.setWindowTitle(tr("createSocket"));
+        msgBox.setText(tr("代理连接成功"));
+        msgBox.show();
     }else{
-        // QMessageBox::warning(nullptr,QString("createSocket"),QString("Error in on_pushButton_socket_clicked()"),QMessageBox::Cancel);
+        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+        msgBox.setWindowTitle(tr("createSocket"));
+        msgBox.setText(tr("代理连接失败"));
+        msgBox.show();
         return;
     }
     csocket = fd;
@@ -84,19 +85,26 @@ void initWindow::on_pushButton_login_clicked()
     QString CONNINFO = QString("dbname=%1 user=%2 password=%3 hostaddr=%4 port=%5").arg(database,user,password,hostName,port);
     std::string PGSQL_CONNINFO = CONNINFO.toStdString();
     myMsg msg(msgType::conn,PGSQL_CONNINFO);
-    if(sendMsg(csocket,msg) < 0){
-        QMessageBox::warning(this,QString("login"),QString("error in sendMsg()"));
-        return;
-    }
+    // conn
+    if(sendMsg(csocket,msg) < 0) return;
 
     myMsg msgres(msgType::none);
     recvMsg(csocket,msgres);
     if(msgres.getmsgType() == msgType::connYES){
-        QMessageBox::information(this,QString("login"),QString("数据库连接成功"));
+        myQMsgBox msgBox(this);
+        msgBox.setWindowTitle(tr("login"));
+        msgBox.setText(tr("数据库连接成功"));
+        msgBox.show();
     }else if(msgres.getmsgType() == msgType::connNO){
-        QMessageBox::warning(this,QString("login"),QString("数据库连接失败"));
+        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+        msgBox.setWindowTitle(tr("login"));
+        msgBox.setText(tr("数据库连接失败"));
+        msgBox.show();
     }else{
-        QMessageBox::critical(this,QString("login"),QString("error"));
+        myQMsgBox msgBox(this,QMessageBox::Critical,10000);
+        msgBox.setWindowTitle(tr("login"));
+        msgBox.setText(tr("error"));
+        msgBox.show();
     }
 
     clientMain* window = new clientMain(this->csocket);

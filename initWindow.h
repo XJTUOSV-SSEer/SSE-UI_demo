@@ -1,8 +1,17 @@
+#pragma once
 #ifndef INITWINDOW_H
 #define INITWINDOW_H
 
 #include "msgSocket.h"
+#include "clientMain.h"
+#include "myQMsgBox.h"
 
+#include <QSettings>
+#include <QString>
+#include <QMessageBox>
+#include <QWaitCondition>
+#include <QPalette>
+#include <QTimer>
 #include <QMainWindow>
 
 #define CONFIGPATH (QCoreApplication::applicationDirPath() + "/config/config.ini")

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MYMSG_H
 #define MYMSG_H
 
@@ -13,11 +14,12 @@ enum class msgType : int
     conn        = 1,
     connYES     = 2,
     connNO      = 3,
-    sql         = 4,
-    sqlresult   = 5,
-    file        = 6,
-    fileYES     = 7,
-    fileNO      = 8,
+    file        = 4,
+    fileYES     = 5,
+    fileNO      = 6,
+    sql         = 7,
+    sqlYES      = 8,
+    sqlNO       = 9,
 };
 
 class myMsg

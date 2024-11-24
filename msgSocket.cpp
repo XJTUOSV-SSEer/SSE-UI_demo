@@ -1,10 +1,6 @@
 #include "msgSocket.h"
 
-#include <cstdio>
-#include <cstring>
-#include <QMessageBox>
-#include <QString>
-#include <windows.h>
+using namespace std;
 
 //初始化Socket
 bool init_Socket()
@@ -57,7 +53,7 @@ bool createSocket(SOCKET &fd, int nSockType)
     //创建一个空的socket
     fd = socket(AF_INET, nSockType, IPPROTO_TCP);
     if (INVALID_SOCKET == fd){
-        QMessageBox::warning(nullptr,QString("socket"),QString("Error in createSocket()"),QMessageBox::Cancel);("WSAStartup");
+        // QMessageBox::warning(nullptr,QString("socket"),QString("Error in createSocket()"),QMessageBox::Cancel);
         return false;
     }
 
@@ -65,7 +61,7 @@ bool createSocket(SOCKET &fd, int nSockType)
     if(connectServer(fd,serverAddr, msgPort))
         return true;
     else{
-        QMessageBox::warning(nullptr,QString("connectServer"),QString("Error in createSocket()"),QMessageBox::Cancel);("WSAStartup");
+        // QMessageBox::warning(nullptr,QString("connectServer"),QString("Error in createSocket()"),QMessageBox::Cancel);
         return false;
     }
 }
@@ -103,8 +99,13 @@ int recvMsg(SOCKET socket,myMsg &msg){
     int ret = -1;
     while(1){
         ret = recv(socket, buffer, bufSize, 0);
-        if( (ret < 0) && (errno == EWOULDBLOCK) ) //No receive data
-            break;
+        if(ret < 0){ //No receive data
+            if(errno == EINTR) continue;
+            else{
+                QMessageBox::warning(nullptr,QString("recv"),QString("error in recvMsg()"));
+                break;
+            }
+        }
         else if(ret == 0){
             continue;
         }else{
@@ -112,7 +113,6 @@ int recvMsg(SOCKET socket,myMsg &msg){
             break;
         }
     }
-
     return ret;
 }
 
@@ -123,5 +123,7 @@ int sendMsg(SOCKET socket,myMsg &msg){
     int ret = -1;
     int cnt = strlen(buffer);
     ret = send(socket,buffer,cnt,0);
+    if(ret < 0)
+        QMessageBox::warning(nullptr,QString("send"),QString("error in sendMsg()"));
     return ret;
 }
