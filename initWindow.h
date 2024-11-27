@@ -1,4 +1,3 @@
-#pragma once
 #ifndef INITWINDOW_H
 #define INITWINDOW_H
 
@@ -11,7 +10,6 @@
 #include <QMessageBox>
 #include <QWaitCondition>
 #include <QPalette>
-#include <QTimer>
 #include <QMainWindow>
 
 #define CONFIGPATH (QCoreApplication::applicationDirPath() + "/config/config.ini")

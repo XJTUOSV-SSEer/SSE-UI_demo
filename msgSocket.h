@@ -1,8 +1,9 @@
-#pragma once
 #ifndef MSGSOCKET_H
 #define MSGSOCKET_H
 
 #include "myMsg.h"
+#include <QTcpSocket>
+
 #include <winsock2.h>
 #include <cstdio>
 #include <cstring>
@@ -14,7 +15,6 @@
 
 inline const char* serverAddr = "127.0.0.1";
 const int msgPort = 20000;
-const int filePort = 20001;
 
 const int bufSize = 1024 * 1;
 

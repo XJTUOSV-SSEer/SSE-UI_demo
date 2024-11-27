@@ -50,7 +50,10 @@ void clientMain::on_pushButton_uploadFile_clicked()
     // 文件大小
     QString filepath = ui->lineEdit_csvFile->text();
     QFile fp(filepath);
-    fp.open(QIODevice::Text);
+    fp.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&fp);  // 用文件构造流
+    QString headers = in.readLine();    // 读取一行放到字符串里
+    QString tmode = in.readLine();
     this->totalBytes = fp.size();
     fp.close();
 
@@ -58,10 +61,10 @@ void clientMain::on_pushButton_uploadFile_clicked()
     QFileInfo fileinfo(filepath);
     this->fileName = fileinfo.fileName();
     std::string filename = this->fileName.toStdString();
-    std::string info = filename +" "+ std::to_string(this->totalBytes);
+    std::string info = filename +" "+ std::to_string(this->totalBytes) + " " + headers.toStdString()+" "+tmode.toStdString();
 
     // 发送 msgType::file
-    myMsg msg(msgType::file,info);
+    myMsg msg(msgType::FILE_REQUEST,info);
     sendMsg(msgsocket,msg);
 
     // 创建 文件专用socket
@@ -71,7 +74,7 @@ void clientMain::on_pushButton_uploadFile_clicked()
         msgBox.setText(tr("文件用代理连接成功，开始传输文件"));
         msgBox.show();
     }else{
-        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("createSocket"));
         msgBox.setText(tr("文件用代理连接失败"));
         msgBox.show();
@@ -84,16 +87,16 @@ void clientMain::on_pushButton_uploadFile_clicked()
     filesocket = INVALID_SOCKET;
 
     // 反馈
-    myMsg msgres(msgType::none);
+    myMsg msgres(msgType::NONE);
     recvMsg(msgsocket,msgres);
 
-    if(msgres.getmsgType() == msgType::fileYES){
+    if(msgres.getmsgType() == msgType::FILE_RECEIVE_SUCCESS){
         myQMsgBox msgBox(this);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("代理接收文件成功"));
         msgBox.show();
     }else{
-        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("代理接收文件失败"));
         msgBox.show();
@@ -104,15 +107,15 @@ void clientMain::on_pushButton_uploadFile_clicked()
 void clientMain::on_pushButton_sqlQuery_clicked()
 {
     QString sql = ui->plainTextEdit_sqlQuery->toPlainText();
-    myMsg msg(msgType::sql,sql.toStdString());
+    myMsg msg(msgType::SQL_REQUEST,sql.toStdString());
     sendMsg(msgsocket,msg);
 
     // 反馈
-    myMsg msgres(msgType::none);
+    myMsg msgres(msgType::NONE);
     recvMsg(msgsocket,msgres);
 
-    if(msgres.getmsgType() != msgType::sqlYES){
-        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+    if(msgres.getmsgType() != msgType::SQL_SUCCESS){
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("代理查询失败"));
         msgBox.show();
@@ -120,13 +123,14 @@ void clientMain::on_pushButton_sqlQuery_clicked()
     }
 
     // 创建 查询专用socket
+    SOCKET sqlsocket;
     if(createSocket(sqlsocket)){
         myQMsgBox msgBox(this);
         msgBox.setWindowTitle(tr("createSocket"));
         msgBox.setText(tr("查询用代理连接成功，开始查询"));
         msgBox.show();
     }else{
-        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("createSocket"));
         msgBox.setText(tr("查询用代理连接失败"));
         msgBox.show();
@@ -134,16 +138,9 @@ void clientMain::on_pushButton_sqlQuery_clicked()
     }
 
     // 接收查询结果
-    vector<vector<string>> sqlresult;
-    recvSqlResult(sqlsocket,sqlresult);
+    recvSqlResult(sqlsocket);
     shutdown(sqlsocket,SD_SEND);
     sqlsocket = INVALID_SOCKET;
-
-    // 展示结果
-    string hstr = msgres.getmsgContent();
-    QString hqstr = QString::fromStdString(hstr);
-    QStringList headers = hqstr.split(',');
-    setSqlRes2Table(sqlresult,headers);
 }
 
 
@@ -183,7 +180,7 @@ bool clientMain::sendFile(SOCKET s, string filepath)
             readcnt += readlen;
             sendlen = send(s, buffer, readlen, 0);
             if (sendlen == SOCKET_ERROR){
-                myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+                myQMsgBox msgBox(this,3000,QMessageBox::Warning);
                 msgBox.setWindowTitle(tr("send"));
                 msgBox.setText(tr("Error in sendFile()"));
                 msgBox.show();
@@ -195,7 +192,7 @@ bool clientMain::sendFile(SOCKET s, string filepath)
         }else if(readlen == 0){
             break;
         }else{
-            myQMsgBox msgBox(this,QMessageBox::Warning,3000);
+            myQMsgBox msgBox(this,3000,QMessageBox::Warning);
             msgBox.setWindowTitle(tr("fread"));
             msgBox.setText(tr("Error in sendFile()"));
             msgBox.show();
@@ -213,8 +210,34 @@ bool clientMain::sendFile(SOCKET s, string filepath)
     return true;
 }
 
-bool clientMain::recvSqlResult(SOCKET socket,vector<vector<string>> &sqlresult){
-
+bool clientMain::recvSqlResult(SOCKET socket){
+    int recvlen = 0, recvcnt = 0, r = 0;
+    char buffer[bufSize + 1] = {'\0'};
+    // 创建模型
+    QStandardItemModel *model = new QStandardItemModel();
+    do{
+        memset(buffer,'\0',bufSize + 1);
+        recvlen = recv(socket, buffer, bufSize, 0);
+        if(recvlen > 0){
+            recvcnt += recvlen;
+            string line(buffer),cell;
+            istringstream lineStream(line);
+            int c = 0;
+            while (std::getline(lineStream, cell, ',')) {
+                QStandardItem *item = new QStandardItem(cell.c_str());
+                model->setItem(r, c++, item);
+            }
+            r++;
+        }else if(recvlen == 0){
+            printf("result reception completed\n");
+            break;
+        }else{
+            printf("recv failed: %s\n", strerror(errno));
+            return false;
+        }
+    } while (true);
+    // model->setHorizontalHeaderLabels(headers);
+    ui->tableView->setModel(model);
     return true;
 }
 

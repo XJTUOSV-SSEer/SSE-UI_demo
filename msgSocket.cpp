@@ -93,7 +93,7 @@ int Receive(SOCKET &fd,void* lpBuf, int nBufLen, int nFlags)
 
 // 接收消息
 int recvMsg(SOCKET socket,myMsg &msg){
-    msg.setmsgType(msgType::none);
+    msg.setmsgType(msgType::NONE);
     msg.setmsgContent("");
     char buffer[bufSize + 1] = {'\0'};
     int ret = -1;

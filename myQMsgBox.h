@@ -1,4 +1,3 @@
-#pragma once
 #ifndef MYQMSGBOX_H
 #define MYQMSGBOX_H
 
@@ -9,7 +8,7 @@ class myQMsgBox : public QMessageBox
 {
     Q_OBJECT
 public:
-    explicit myQMsgBox(QWidget *parent = nullptr,QMessageBox::Icon icon = QMessageBox::Information,int tim = 1000);
+    explicit myQMsgBox(QWidget *parent = nullptr,int tim = 1000,QMessageBox::Icon icon = QMessageBox::Information);
 };
 
 #endif // MYQMSGBOX_H

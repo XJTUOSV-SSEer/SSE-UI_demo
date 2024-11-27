@@ -1,7 +1,7 @@
 #include "myMsg.h"
 
 myMsg::myMsg() {
-    this->mtype = msgType::none;
+    this->mtype = msgType::NONE;
     this->msgContent = "\0";
 }
 

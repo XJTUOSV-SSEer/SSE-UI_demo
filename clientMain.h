@@ -1,4 +1,3 @@
-#pragma once
 #ifndef CLIENTMAIN_H
 #define CLIENTMAIN_H
 
@@ -6,20 +5,17 @@
 #include "myQMsgBox.h"
 
 #include <QMainWindow>
-#include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQueryModel>
 #include <QDebug>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QString>
-#include <QtSql/QSqlQueryModel>
-#include <QtSql/QSqlQuery>
 #include <QStringList>
 #include <QTextStream>
-#include <QTimer>
 #include <QProgressDialog>
 #include <QStandardItemModel>
 #include <QTableView>
+#include <sstream>
 
 namespace Ui {
 class clientMain;
@@ -47,14 +43,13 @@ protected:
 
 private:
     bool sendFile(SOCKET socket, std::string filepath);
-    bool recvSqlResult(SOCKET socket,std::vector<std::vector<std::string>> &sqlresult);
+    bool recvSqlResult(SOCKET socket);
     void setSqlRes2Table(std::vector<std::vector<std::string>> &sqlresult,QStringList &headers);
 
 private:
     Ui::clientMain *ui;
     SOCKET msgsocket;
     SOCKET filesocket;
-    SOCKET sqlsocket;
     qint64 totalBytes;
     QString fileName;
 };

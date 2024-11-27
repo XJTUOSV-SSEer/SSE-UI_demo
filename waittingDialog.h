@@ -1,4 +1,3 @@
-#pragma once
 #ifndef WAITTINGDIALOG_H
 #define WAITTINGDIALOG_H
 

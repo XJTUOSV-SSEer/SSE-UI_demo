@@ -50,15 +50,17 @@ void initWindow::on_pushButton_socket_clicked()
 
     SOCKET fd;
     if(createSocket(fd)){
-        myQMsgBox msgBox(this);
-        msgBox.setWindowTitle(tr("createSocket"));
-        msgBox.setText(tr("代理连接成功"));
-        msgBox.show();
+        QMessageBox::information(this,tr("createSocket"),tr("代理连接成功"));
+        // myQMsgBox msgBox(this);
+        // msgBox.setWindowTitle(tr("createSocket"));
+        // msgBox.setText(tr("代理连接成功"));
+        // msgBox.show();
     }else{
-        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
-        msgBox.setWindowTitle(tr("createSocket"));
-        msgBox.setText(tr("代理连接失败"));
-        msgBox.show();
+        QMessageBox::information(this,tr("createSocket"),tr("代理连接失败"));
+        // myQMsgBox msgBox(this,3000,QMessageBox::Warning);
+        // msgBox.setWindowTitle(tr("createSocket"));
+        // msgBox.setText(tr("代理连接失败"));
+        // msgBox.show();
         return;
     }
     csocket = fd;
@@ -84,24 +86,26 @@ void initWindow::on_pushButton_login_clicked()
     QString database = ui->lineEdit_database->text();
     QString CONNINFO = QString("dbname=%1 user=%2 password=%3 hostaddr=%4 port=%5").arg(database,user,password,hostName,port);
     std::string PGSQL_CONNINFO = CONNINFO.toStdString();
-    myMsg msg(msgType::conn,PGSQL_CONNINFO);
+    myMsg msg(msgType::CONNECTION_REQUEST,PGSQL_CONNINFO);
     // conn
     if(sendMsg(csocket,msg) < 0) return;
 
-    myMsg msgres(msgType::none);
+    myMsg msgres(msgType::NONE);
     recvMsg(csocket,msgres);
-    if(msgres.getmsgType() == msgType::connYES){
-        myQMsgBox msgBox(this);
-        msgBox.setWindowTitle(tr("login"));
-        msgBox.setText(tr("数据库连接成功"));
-        msgBox.show();
-    }else if(msgres.getmsgType() == msgType::connNO){
-        myQMsgBox msgBox(this,QMessageBox::Warning,3000);
-        msgBox.setWindowTitle(tr("login"));
-        msgBox.setText(tr("数据库连接失败"));
-        msgBox.show();
+    if(msgres.getmsgType() == msgType::CONNECTION_SUCCESS){
+        QMessageBox::information(this,tr("login"),tr("数据库连接成功"));
+        // myQMsgBox msgBox(this);
+        // msgBox.setWindowTitle(tr("login"));
+        // msgBox.setText(tr("数据库连接成功"));
+        // msgBox.show();
+    }else if(msgres.getmsgType() == msgType::CONNECTION_FAILED){
+        QMessageBox::information(this,tr("login"),tr("数据库连接失败"));
+        // myQMsgBox msgBox(this,3000,QMessageBox::Warning);
+        // msgBox.setWindowTitle(tr("login"));
+        // msgBox.setText(tr("数据库连接失败"));
+        // msgBox.show();
     }else{
-        myQMsgBox msgBox(this,QMessageBox::Critical,10000);
+        myQMsgBox msgBox(this,10000,QMessageBox::Critical);
         msgBox.setWindowTitle(tr("login"));
         msgBox.setText(tr("error"));
         msgBox.show();
