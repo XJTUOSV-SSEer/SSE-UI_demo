@@ -1,6 +1,7 @@
-#ifndef SOCKET_CLIENT_H
-#define SOCKET_CLIENT_H
+#ifndef SOCKETCLIENT_H
+#define SOCKETCLIENT_H
 
+#include <QObject>
 #include <QWidget>
 #include <QTcpSocket>
 #include <QString>
@@ -10,25 +11,24 @@
 
 #define CONFIGPATH (QCoreApplication::applicationDirPath() + "/config/config.ini")
 
-
 namespace Ui {
-class socket_Client;
+class socketClient;
 }
 
-class socket_Client : public QWidget
+class socketClient : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit socket_Client(QWidget *parent = nullptr);
-    ~socket_Client();
+    explicit socketClient(QWidget *parent = nullptr);
+    ~socketClient();
 
 private slots:
     void on_pushButton_connect_clicked();
 
 private:
-    Ui::socket_Client *ui;
+    Ui::socketClient *ui;
     QPointer<QTcpSocket> c_socket;
 };
 
-#endif // SOCKET_CLIENT_H
+#endif // SOCKETCLIENT_H

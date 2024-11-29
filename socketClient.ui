@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>socket_Client</class>
- <widget class="QWidget" name="socket_Client">
+ <class>socketClient</class>
+ <widget class="QWidget" name="socketClient">
   <property name="geometry">
    <rect>
     <x>0</x>

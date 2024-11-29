@@ -1,11 +1,11 @@
-#include "socket_Client.h"
-#include "ui_socket_Client.h"
+#include "socketClient.h"
+#include "ui_socketClient.h"
 #include "dbConnection.h"
 #include "myQMsgBox.h"
 
-socket_Client::socket_Client(QWidget *parent)
+socketClient::socketClient(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::socket_Client)
+    , ui(new Ui::socketClient)
 {
     ui->setupUi(this);
     c_socket = new QTcpSocket(this);
@@ -22,12 +22,12 @@ socket_Client::socket_Client(QWidget *parent)
     }
 }
 
-socket_Client::~socket_Client()
+socketClient::~socketClient()
 {
     delete ui;
 }
 
-void socket_Client::on_pushButton_connect_clicked()
+void socketClient::on_pushButton_connect_clicked()
 {
     // 获取编辑框中的ip和端口
     unsigned short port = ui->lineEdit_port->text().toUShort();
@@ -48,8 +48,8 @@ void socket_Client::on_pushButton_connect_clicked()
         close();
     } else {
         myQMsgBox msgBox(this,3000,QMessageBox::Warning);
-        msgBox.setWindowTitle(tr("文件代理"));
-        msgBox.setText(tr("文件用代理连接失败"));
+        msgBox.setWindowTitle(tr("连接代理"));
+        msgBox.setText(tr("代理连接失败"));
         msgBox.exec();
         return;
     }

@@ -6,10 +6,13 @@
 #include <cstdio>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
+#include <QFile>
+#include <QThread>
 
 static const int bufSize = 1024;
 // static const char* serverAddr = "127.0.0.1";
-// static const unsigned short msgPort = 20000;
+static const unsigned short msgPort = 20000;
 // static const unsigned short filePort = 20001;
 // static const unsigned short sqlResPort = 20002;
 
@@ -50,5 +53,7 @@ private:
 
 bool recvMsg(QTcpSocket *socket,myMsg &msg);
 bool sendMsg(QTcpSocket *socket,myMsg &msg);
+bool recvFile(QTcpSocket *filesocket,QString fileName,qint64 fileSize);
+bool sendSqlResult(QTcpSocket *sqlSocket,std::vector<std::vector<std::string>> &sqlResult);
 
 #endif // UTILS_H

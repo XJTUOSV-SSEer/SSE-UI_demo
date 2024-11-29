@@ -1,6 +1,6 @@
 #include "clientMain.h"
 #include "ui_clientMain.h"
-#include "socket_Client.h"
+#include "socketClient.h"
 #include "utils.h"
 #include "myQMsgBox.h"
 
@@ -20,7 +20,7 @@ clientMain::clientMain(QPointer<QTcpSocket> socket, QWidget *parent)
         QMessageBox::warning(nullptr,tr("代理"),tr("代理已断开，点击确认返回连接代理"),QMessageBox::Ok);
         msgsocket->deleteLater();
         msgsocket->disconnect();
-        socket_Client *w = new socket_Client();
+        socketClient *w = new socketClient();
         w->show();
         close();
         delete this;
@@ -98,7 +98,7 @@ void clientMain::on_pushButton_uploadFile_clicked()
         msgBox.setText(tr("文件用代理连接成功，开始传输文件"));
         msgBox.exec();
     } else {
-        myQMsgBox msgBox(this,3000000,QMessageBox::Warning);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("文件代理"));
         msgBox.setText(tr("文件用代理连接失败"));
         msgBox.exec();
@@ -107,13 +107,14 @@ void clientMain::on_pushButton_uploadFile_clicked()
 
     // 发送文件
     if(sendFile(filesocket,filepath)){
+        filesocket->flush();
         myQMsgBox msgBox(this);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("文件发送成功"));
         msgBox.exec();
         filesocket->disconnectFromHost();
     }else{
-        myQMsgBox msgBox(this,3000000,QMessageBox::Warning);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("文件发送失败"));
         msgBox.exec();
@@ -131,7 +132,7 @@ void clientMain::on_pushButton_uploadFile_clicked()
         msgBox.setText(tr("代理接收文件成功"));
         msgBox.exec();
     }else{
-        myQMsgBox msgBox(this,3000000,QMessageBox::Warning);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("代理接收文件失败"));
         msgBox.exec();
@@ -145,21 +146,6 @@ void clientMain::on_pushButton_sqlQuery_clicked()
     QString sql = ui->plainTextEdit_sqlQuery->toPlainText();
     mContent["sql"] = sql;
 
-    QRegularExpression regex("SELECT\\s+.*?(?=;|\\s|$)", QRegularExpression::CaseInsensitiveOption);
-    QRegularExpressionMatch match = regex.match(sql);
-    QStringList headerList;
-    QString headers;
-    if (match.hasMatch()) {
-        // 返回匹配的SELECT子句
-        headers = match.captured(0);
-        headerList = headers.split(',');
-    }
-    else {
-        // 如果没有匹配到，返回空字符串
-        headers = "";
-        headerList = headers.split(',');
-    }
-
     myMsg msg(msgType::SQL_REQUEST,mContent);
     sendMsg(msgsocket,msg);
 
@@ -168,7 +154,7 @@ void clientMain::on_pushButton_sqlQuery_clicked()
     recvMsg(msgsocket,msgres);
 
     if(msgres.getmType() != msgType::SQL_SUCCESS){
-        myQMsgBox msgBox(this,3000000,QMessageBox::Warning);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("sendfile"));
         msgBox.setText(tr("代理查询失败"));
         msgBox.exec();
@@ -190,7 +176,7 @@ void clientMain::on_pushButton_sqlQuery_clicked()
         msgBox.setText(tr("查询用代理连接成功，开始查询"));
         msgBox.exec();
     } else {
-        myQMsgBox msgBox(this,3000000,QMessageBox::Warning);
+        myQMsgBox msgBox(this,3000,QMessageBox::Warning);
         msgBox.setWindowTitle(tr("查询代理"));
         msgBox.setText(tr("查询用代理连接失败"));
         msgBox.exec();
@@ -198,6 +184,21 @@ void clientMain::on_pushButton_sqlQuery_clicked()
     }
 
     // 接收查询结果
+    QRegularExpression regex("SELECT\\s+.*?(?=;|\\s|$)", QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatch match = regex.match(sql);
+    QStringList headerList;
+    QString headers;
+    if (match.hasMatch()) {
+        // 返回匹配的SELECT子句
+        headers = match.captured(0);
+        headerList = headers.split(',');
+    }
+    else {
+        // 如果没有匹配到，返回空字符串
+        headers = "";
+        headerList = headers.split(',');
+    }
+
     recvSqlResult(sqlsocket,headerList);
     sqlsocket->disconnectFromHost();
 }
@@ -205,7 +206,6 @@ void clientMain::on_pushButton_sqlQuery_clicked()
 
 bool clientMain::sendFile(QTcpSocket *socket, QString filepath)
 {
-    bool ret = false;
     QApplication::setOverrideCursor(Qt::WaitCursor);//设置鼠标为等待状态
     // QProgressDialog progress;
     // progress.setWindowTitle("sendFile");
@@ -223,7 +223,6 @@ bool clientMain::sendFile(QTcpSocket *socket, QString filepath)
     }
 
     qint64 perloadSize = bufSize; //每一帧发送1024*1个字节，控制每次读取文件的大小
-    double progressByte = 0;
     qint64 bytesWritten = 0, bytesRemain = fileSize;
     int cnt = 0;
 
@@ -237,12 +236,14 @@ bool clientMain::sendFile(QTcpSocket *socket, QString filepath)
         if(bytesWritten < fileSize){
             QByteArray readBlock = fp.read(qMin(bytesRemain, perloadSize));
             qint64 WriteBolockSize = socket->write(readBlock, readBlock.size());
+            socket->write("\n");
+            socket->flush();
             qDebug() << QString("第%1次发送: %2B").arg(cnt).arg(readBlock.size());
             QThread::usleep(3); //添加延时，防止发送文件帧过快，导致丢包
             //等待发送完成，才能继续下次发送，
             if(!socket->waitForBytesWritten(3*1000)) {
                 QMessageBox::warning(this,tr("发送文件"),tr("网络请求超时"),QMessageBox::Ok);
-                ret = false;
+                return false;
             }
             bytesWritten += WriteBolockSize;
             int  progress = static_cast<int>(bytesWritten * 100.0 / fileSize);
@@ -252,50 +253,44 @@ bool clientMain::sendFile(QTcpSocket *socket, QString filepath)
             fp.close();
             QApplication::restoreOverrideCursor();
             // progress.close();
-            myQMsgBox msgBox(this,1000000);
+            myQMsgBox msgBox(this,1000);
             msgBox.setWindowTitle(tr("send file"));
             msgBox.setText(QString("send file success!(sendsize: %1B/%2B)").arg(bytesWritten).arg(fileSize));
             msgBox.exec();
-            ret = true;
+            return true;
         }else {
             // QMessageBox::warning(this,tr("发送文件"),tr("error: bytesWritten > fileSize"),QMessageBox::Ok);
-            myQMsgBox msgBox(this,3000000,QMessageBox::Warning);
+            myQMsgBox msgBox(this,3000,QMessageBox::Warning);
             msgBox.setWindowTitle(tr("发送文件"));
             msgBox.setText(tr("error: bytesWritten > fileSize"));
             msgBox.exec();
-            ret = false;
+            return false;
         }
     }while (true);
-    return ret;
+    return true;
 }
 
 bool clientMain::recvSqlResult(QTcpSocket * socket,QStringList &headerList){
     // 创建模型
     QStandardItemModel *model = new QStandardItemModel();
 
-    QByteArray data;
-    while (socket->bytesAvailable() > 0) {
-        data.append(socket->readAll());
-    }
-
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    if (!doc.isNull()) {
-        QJsonArray jsonArray = doc.array();
-        int r = 0;
-        for (const QJsonValue &rowValue : jsonArray) {
-            const QJsonArray &rowArray = rowValue.toArray();
-            vector<string> row;
+    int r = 0;
+    while (socket->waitForReadyRead()) {
+        QByteArray line = socket->readLine(); // 按行读取数据
+        if (line.isEmpty()) continue; // 忽略空行
+        QJsonDocument doc = QJsonDocument::fromJson(line); // 将字节数组解析为JSON文档
+        if (!doc.isNull()) {
+            QJsonArray jsonArray = doc.array();
             int c = 0;
-            for (const QJsonValue &itemValue : rowArray) {
+            for (const QJsonValue &itemValue : jsonArray) {
                 QVariant item = itemValue.toVariant();
                 QStandardItem *it = new QStandardItem(item.toString());
                 model->setItem(r, c++, it);
-                row.push_back(itemValue.toString().toStdString());
             }
             r++;
+        }else{
+            return false;
         }
-    }else{
-        return false;
     }
 
     model->setHorizontalHeaderLabels(headerList);

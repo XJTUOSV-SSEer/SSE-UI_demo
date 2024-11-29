@@ -1,4 +1,4 @@
-#include "socket_Client.h"
+#include "socketClient.h"
 
 #include <QApplication>
 #include <QStyleFactory>
@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     a.setStyle("windows11"); // 设置Fusion风格:windows11 windowsvista Windows Fusion
-    socket_Client w;
+    socketClient w;
     w.show();
     return a.exec();
 }

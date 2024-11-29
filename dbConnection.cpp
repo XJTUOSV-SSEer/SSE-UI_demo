@@ -2,7 +2,7 @@
 #include "./ui_dbConnection.h"
 #include "clientMain.h"
 #include "myQMsgBox.h"
-#include "socket_Client.h"
+#include "socketClient.h"
 #include "utils.h"
 
 using namespace std;
@@ -47,7 +47,7 @@ dbConnection::dbConnection(QPointer<QTcpSocket> socket,QWidget *parent)
         QMessageBox::warning(nullptr,tr("代理"),tr("代理已断开，点击确认返回连接代理"),QMessageBox::Ok);
         c_socket->deleteLater();
         c_socket->disconnect();
-        socket_Client *w = new socket_Client();
+        socketClient *w = new socketClient();
         w->show();
         close();
         delete this;

@@ -81,3 +81,61 @@ bool sendMsg(QTcpSocket * socket,myMsg &msg){
 
     return true;
 }
+
+// 接收文件
+bool recvFile(QTcpSocket *filesocket,QString fileName,qint64 fileSize)
+{
+    QFile fp(fileName);
+    if (!fp.open(QIODevice::ReadWrite)){
+        printf("Failed to open file\n");
+        return false;
+    }
+
+    qint64 recvcnt = 0, writecnt = 0;
+    while(recvcnt < fileSize){
+        QByteArray readBlock = filesocket->readLine();
+        if (readBlock.isEmpty()) continue; // 忽略空行
+        int recvBlockSize = readBlock.size();
+        recvcnt += recvBlockSize;
+        int writelen = fp.write(readBlock);
+        if(writelen <= 0 && recvBlockSize > 0){
+            printf("write file with error\n");
+            fp.close();
+            return false;
+        }
+        writecnt += writelen;
+    }
+    fp.close();
+    printf("File reception completed\n");
+    if(recvcnt == fileSize && writecnt == fileSize){
+        printf("receive and write file success!\n");
+        return true;
+    }else{
+        printf("receive or write file with error!\n");
+        return false;
+    }
+}
+
+// 发送结果
+bool sendSqlResult(QTcpSocket *socket, std::vector<std::vector<std::string>> &sqlResult){
+    for (const auto& row : sqlResult) {
+        QJsonArray jsonRow;
+        for (const auto& field : row) {
+            jsonRow.append(QString::fromStdString(field));
+        }
+
+        QJsonDocument doc(jsonRow);
+        QByteArray jsonBytes = doc.toJson(QJsonDocument::Compact); // 将JSON数组转换为字节数组
+
+        socket->write(jsonBytes); // 发送JSON数据
+        socket->write("\n"); // 发送行结束符，表示一行结束
+        socket->flush();
+        QThread::usleep(3); //添加延时，防止发送文件帧过快，导致丢包
+        //等待发送完成，才能继续下次发送，
+        if(!socket->waitForBytesWritten(3*1000)) {
+            printf("timeout");
+            return false;
+        }
+    }
+    return true;
+}
