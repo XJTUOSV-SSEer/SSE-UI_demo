@@ -14,14 +14,14 @@ find_package(Qt6 COMPONENTS Core Gui Widgets Sql Network REQUIRED )
 add_executable(SSE-UI_demo
 
         main.cpp
-        initWindow.cpp
-        initWindow.h
-        initWindow.ui
-        myMsg.cpp myMsg.h
-        msgSocket.cpp msgSocket.h
+        dbConnection.cpp
+        dbConnection.h
+        dbConnection.ui
         clientMain.h clientMain.cpp clientMain.ui
         waittingDialog.h waittingDialog.cpp waittingDialog.ui
-        myQMsgBox.h myQMsgBox.cpp
+        myQMsgBox.h
+        socket_Client.cpp socket_Client.h socket_Client.ui
+        utils.h utils.cpp
 
 )
 

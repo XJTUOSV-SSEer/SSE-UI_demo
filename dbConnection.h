@@ -1,36 +1,34 @@
-#ifndef INITWINDOW_H
-#define INITWINDOW_H
-
-#include "msgSocket.h"
-#include "clientMain.h"
-#include "myQMsgBox.h"
+#ifndef DBCONNECTION_H
+#define DBCONNECTION_H
 
 #include <QSettings>
 #include <QString>
 #include <QMessageBox>
-#include <QWaitCondition>
-#include <QPalette>
 #include <QMainWindow>
+#include <QPointer>
+#include <QTcpSocket>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #define CONFIGPATH (QCoreApplication::applicationDirPath() + "/config/config.ini")
 
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
-class initWindow;
+class dbConnection;
 }
 QT_END_NAMESPACE
 
-class initWindow : public QMainWindow
+class dbConnection : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    initWindow(QWidget *parent = nullptr);
-    ~initWindow();
+    dbConnection(QPointer<QTcpSocket> socket,QWidget *parent = nullptr);
+    ~dbConnection();
 
 private slots:
-    void on_pushButton_socket_clicked();
+    void on_pushButton_change_clicked();
 
     void on_checkBox_checkStateChanged(const Qt::CheckState &arg1);
 
@@ -39,8 +37,8 @@ private slots:
     void on_pushButton_quit_clicked();
 
 private:
-    Ui::initWindow *ui;
+    Ui::dbConnection *ui;
     bool ischeck;
-    SOCKET csocket;
+    QPointer<QTcpSocket> c_socket;
 };
-#endif // INITWINDOW_H
+#endif // DBCONNECTION_H
